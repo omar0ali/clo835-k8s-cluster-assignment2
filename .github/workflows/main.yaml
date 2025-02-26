@@ -1,0 +1,56 @@
+name: Build, and Deploy Docker Images to ECR
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: Build Images and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2
+
+    - name: Login to Amazon for ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+        AWS_REGION: us-east-1
+
+    - name: Ensure ECR repositories exist
+      run: |
+        aws ecr describe-repositories --repository-names clo835-assignment1/mysql || aws ecr create-repository --repository-name clo835-assignment1/mysql
+        aws ecr describe-repositories --repository-names clo835-assignment1/web_server || aws ecr create-repository --repository-name clo835-assignment1/web_server
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+        AWS_REGION: us-east-1
+
+    - name: Build, test, tag, and push mysql image to Amazon ECR
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: clo835-assignment1/mysql
+        IMAGE_TAG: v0.1
+      run: |
+        cd src/dockerfiles/mysql/
+        ls -ltra
+        # Docker build
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+    
+    - name: Build, tag, and push web_server image to Amazon ECR
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: clo835-assignment1/web_server
+        IMAGE_TAG: v0.1
+      run: |
+        cd src/dockerfiles/web_server/
+        ls -ltra
+        # Docker build
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG

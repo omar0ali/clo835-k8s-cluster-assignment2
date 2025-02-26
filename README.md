@@ -8,7 +8,7 @@ We will need ensure to build and push two images to Amazon ECR (**MySQL** and th
 Will prepare everything locally first before moving to the EC2 Instance. 
 
 >[!NOTE]
->I won't use terraform this time as its optional, I will manually create the ec2 instance and ensure to use `t2.medium` since it worked quite well with me before. 
+>I won't use terraform this time as its optional, I will manually create the ec2 instance and ensure to use `t2.medium` since it worked quite well with KIND before on the previous assignment. 
 >
 >Will Also use the default settings for VPC, Subnets, Routings and Vockey to simplify the work. Only one thing will ensure to open which are the ports using **Security Groups** 
 
@@ -19,3 +19,4 @@ Will prepare everything locally first before moving to the EC2 Instance.
 4. kubectl
 ## Steps
 #### First Step: Build Images (MySQL, WebSite) And Push To Amazon ECR (Automated in GitHub)
+I will keep referring to [main.yaml](https://github.com/omar0ali/portable-cloud-assignment1/blob/main/.github/workflows/main.yml) of the assignment 1 I worked on, since its already has the code to build and push the images to Amazon ECR.
