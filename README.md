@@ -19,4 +19,15 @@ Will prepare everything locally first before moving to the EC2 Instance.
 4. kubectl
 ## Steps
 #### First Step: Build Images (MySQL, WebSite) And Push To Amazon ECR (Automated in GitHub)
-I will keep referring to [main.yaml](https://github.com/omar0ali/portable-cloud-assignment1/blob/main/.github/workflows/main.yml) of the assignment 1 I worked on, since its already has the code to build and push the images to Amazon ECR.
+Referring to [main.yaml](https://github.com/omar0ali/portable-cloud-assignment1/blob/main/.github/workflows/main.yml) of the assignment 1 I worked on, since its already has the code to build and push the images to Amazon ECR. I copied the part that when it builds the image and push these images.
+##### GitHub Action - Build and push images
+###### Ensure the following setup in the GitHub Actions Secrets
+2. `AWS_ACCESS_KEY_ID`
+3. `AWS_SECRET_ACCESS_KEY`
+4. `AWS_SESSION_TOKEN`
+
+>[!NOTE]
+The containerized application will use **pod**, **replicaset**, **deployment** and **service** manifests. Will expose web application using Service of type **NodePort**. And MySQL will be exposed using a Service of type **ClusterIP**. Lastly, a modification of the config file and another deployment to show a new version of the application.
+
+**TODO**: Will need to verify if its possible.
+Will be testing the local environment similarly as we did for [assignment1](https://github.com/omar0ali/portable-cloud-assignment1/tree/main?tab=readme-ov-file#testing-in-local-environment) The only difference is that in KIND will write deployment yaml files that will create multiple pods with specific variables or name.
