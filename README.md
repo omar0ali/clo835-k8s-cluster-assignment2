@@ -19,7 +19,7 @@ Will prepare everything locally first before moving to the EC2 Instance.
 4. kubectl
 ## Steps
 #### First Step: Build Images (MySQL, WebSite) And Push To Amazon ECR (Automated in GitHub)
-Referring to [main.yaml](https://github.com/omar0ali/portable-cloud-assignment1/blob/main/.github/workflows/main.yml) of the assignment 1 I worked on, since its already has the code to build and push the images to Amazon ECR. I copied the part that when it builds the image and push these images.
+Referring to [main.yaml](https://github.com/omar0ali/portable-cloud-assignment1/blob/main/.github/workflows/main.yml) of the assignment 1 that I worked on, since its already has the code to build and push the images (mysql, flask_app) to Amazon ECR. I copied the part that when it builds the image and push them to amazon ECR.
 ##### GitHub Action - Build and push images
 ###### Ensure the following setup in the GitHub Actions Secrets
 2. `AWS_ACCESS_KEY_ID`
@@ -29,5 +29,32 @@ Referring to [main.yaml](https://github.com/omar0ali/portable-cloud-assignment1/
 >[!NOTE]
 The containerized application will use **pod**, **replicaset**, **deployment** and **service** manifests. Will expose web application using Service of type **NodePort**. And MySQL will be exposed using a Service of type **ClusterIP**. Lastly, a modification of the config file and another deployment to show a new version of the application.
 
-**TODO**: Will need to verify if its possible.
-Will be testing the local environment similarly as we did for [assignment1](https://github.com/omar0ali/portable-cloud-assignment1/tree/main?tab=readme-ov-file#testing-in-local-environment) The only difference is that in KIND will write deployment yaml files that will create multiple pods with specific variables or name.
+#### ECR Login EC2 Instance
+
+**First `aws` credentials**
+Create the following directory in ec2 instance. And create credentials file within that directory.
+
+```bash
+mkdir $HOME/.aws
+touch credentials
+```
+
+Go to the `AWS Academy Learner Lab` and copy the AWS details for the `AWS CLI` application.
+
+Ensure user logged in.
+
+```bash
+aws sts get-caller-identity
+```
+
+**Next, `kubectl`**
+
+This is a critical step once we login to the `ec2` instance, will have to login into `aws` and ensure we use the key in `kubectl` will use the following commands to set and ensure when starting the deployment it pulls the image correctly from the registry.
+
+```bash
+aws ecr get-login-password --region us-east-1 > ecr-pass.txt
+```
+
+```bash
+kubectl create secret docker-registry ecr-secret --docker-server=<aws-account-id>.dkr.ecr.us-east-1.amazonaws.com --docker-username=AWS --docker-password=$(cat ecr-pass.txt)
+```
