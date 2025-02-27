@@ -29,9 +29,8 @@ Referring to [main.yaml](https://github.com/omar0ali/portable-cloud-assignment1/
 >[!NOTE]
 The containerized application will use **pod**, **replicaset**, **deployment** and **service** manifests. Will expose web application using Service of type **NodePort**. And MySQL will be exposed using a Service of type **ClusterIP**. Lastly, a modification of the config file and another deployment to show a new version of the application.
 
-#### ECR Login EC2 Instance
-
-**First `aws` credentials**
+#### Step 1: ECR Login EC2 Instance
+##### First `aws` credentials
 Create the following directory in ec2 instance. And create credentials file within that directory.
 
 ```bash
@@ -56,5 +55,35 @@ aws ecr get-login-password --region us-east-1 > ecr-pass.txt
 ```
 
 ```bash
-kubectl create secret docker-registry ecr-secret --docker-server=<aws-account-id>.dkr.ecr.us-east-1.amazonaws.com --docker-username=AWS --docker-password=$(cat ecr-pass.txt)
+kubectl create secret docker-registry ecr-secret --docker-server=<aws-account-id>.dkr.ecr.us-east-1.amazonaws.com --docker-username=AWS --docker-password="$(cat ecr-pass.txt)"
 ```
+
+#### Step 2: Deploying Pods & Services
+
+Firstly, will need to create a cluster node and **we need to ensure the port we are exposing is also mentioned in that configuration file.** 
+###### Example
+
+```yaml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      - containerPort: 30000
+        hostPort: 30000
+        listenAddress: "0.0.0.0"
+        protocol: TCP
+```
+
+>[!IMPORTANT]
+>As I was testing my deployments with a default imperative creation of the first cluster, ports weren't mapped to the host, so it took quite a long time until understanding what was missing. Once that was set, I recreated the cluster with that configuration file, and ensured that my pods were accessed by the host machine. Not to mention the creation of services for each type of pod, such as mysql (ClusterIP) and the app (NodePort) is important.
+
+>[!NOTE]
+>`kubectl apply -f <file>.yaml`
+
+>[!IMPORTANT]
+>Here is a command that I used the most while debugging and encountering issues when running the pods of the flask application.
+>`kubectl logs -l app=app --all-containers` (app) is the name of the pods. It showed errors and made it easy to fix problems quick.
+>
+>After every error I encounter I made sure to remove currently deployment and start over. I know I can update and apply again, but this is done for practice reason and learning. `kubectl delete deployment app-deployment` similar for the service `kubectl delete service app-service`
+
