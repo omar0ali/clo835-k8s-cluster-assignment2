@@ -77,6 +77,14 @@ nodes:
 
 >[!IMPORTANT]
 >As I was testing my deployments with a default imperative creation of the first cluster, ports weren't mapped to the host, so it took quite a long time until understanding what was missing. Once that was set, I recreated the cluster with that configuration file, and ensured that my pods were accessed by the host machine. Not to mention the creation of services for each type of pod, such as mysql (ClusterIP) and the app (NodePort) is important.
+##### Started With
+At the beginning I just wanted to have a working website, so I only used deployment kind for both mysql and web-application, and it worked after configuring the services as well, and used  the default namespaces. 
+###### Splitting/Dividing the deployment into (pod, replicaset, deployment) 
+I think this part seems redundant since we are repeating the same thing over three other configuration files.
+
+One thing I had to keep in mind which is since each config file or manifest file are independent, thereby will create their own instances and that is not what I want, I only want them to be connected and share or match their labels through all the configurations, meaning if I applied the pod.yaml `kubectl apply -f app-pod.yaml` and then I used the replicaset.yaml `kubectl apply -f app-replicaset.yaml` they should know that there is one pod already created and based on the specified ***replicas*** it should ensure they don't exceed that set, because they all share the same labels.
+
+
 
 >[!NOTE]
 >`kubectl apply -f <file>.yaml`
