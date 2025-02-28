@@ -78,11 +78,42 @@ nodes:
 >[!IMPORTANT]
 >As I was testing my deployments with a default imperative creation of the first cluster, ports weren't mapped to the host, so it took quite a long time until understanding what was missing. Once that was set, I recreated the cluster with that configuration file, and ensured that my pods were accessed by the host machine. Not to mention the creation of services for each type of pod, such as mysql (ClusterIP) and the app (NodePort) is important.
 ##### Started With
-At the beginning I just wanted to have a working website, so I only used deployment kind for both mysql and web-application, and it worked after configuring the services as well, and used  the default namespaces. 
+At the beginning I just wanted to have a working website, so I only used deployment KIND for both mysql and web-application, and it worked after configuring the services as well, and used  the default namespaces.
 ###### Splitting/Dividing the deployment into (pod, replicaset, deployment) 
-I think this part seems redundant since we are repeating the same thing over three other configuration files.
+I think this part seems redundant since we are repeating the same thing over three other configuration files. Since a deployment manifest seems sufficiently enough.
 
-One thing I had to keep in mind which is since each config file or manifest file are independent, thereby will create their own instances and that is not what I want, I only want them to be connected and share or match their labels through all the configurations, meaning if I applied the pod.yaml `kubectl apply -f app-pod.yaml` and then I used the replicaset.yaml `kubectl apply -f app-replicaset.yaml` they should know that there is one pod already created and based on the specified ***replicas*** it should ensure they don't exceed that set, because they all share the same labels.
+I took a look at [labels and selectors](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/) to see how its used and what benefit do we get from using it. 
+
+>Labels are intended to be used to specify identifying attributes of objects that are meaningful and relevant to users, but do not directly imply semantics --[Labels and Selectors](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/)
+
+From that I understand there is no dependency between running pods, replicas_sets, and deployments after each other so they can use the pod that were initially created from i.e replica_set or pod. So its only used to organize and to select subsets of objects (such as pods).
+
+Because I tried to do that and see what happens when I run (pod.yaml, replicaset.yaml and deployment.yaml) in order and check how many pods were created from that, and I saw, two pods, one from the pod.yaml and the second from the deployment. But initially we only need one pod of `mysql`. Thus, this confirms that there isn't any semantic or meaningful relationship between them.
+
+```bash
+[]$ kubectl get deployments
+NAME               READY   UP-TO-DATE   AVAILABLE   AGE
+mysql-deployment   1/1     1            1           7s
+[]$ kubectl get replicaset
+NAME                         DESIRED   CURRENT   READY   AGE
+mysql-deployment-85d884657   1         1         1       22s
+mysql-replicaset             1         1         1       16m
+[]$ kubectl get pods
+NAME                               READY   STATUS    RESTARTS   AGE
+mysql                              1/1     Running   0          17m
+mysql-deployment-85d884657-49c2r   1/1     Running   0          27s
+[]$
+
+```
+
+What I see here that the deployment creates its own replica_set and pods, disregarding the fact there exists a replicas_set and a pod using the selector and `matchLabels`. So I think only the replica_set can manage the existing pods using the selector. 
+
+I found an issue [github:#66742](https://github.com/kubernetes/kubernetes/issues/66742) someone suggested that because a replica_set was manually created first, that’s why the deployment did not take over. However, the real reason is that deployments do not adopt pre-existing replica_sets or pods, they always create their own. [reference](https://github.com/kubernetes/kubernetes/issues/66742#issuecomment-2054124694)
+
+##### Continue
+I believe that I will face the same issue when I start the employee flask application, and that it will create even more replicas, original a single pod from the first pod manifest file, then 3 replicas pods from the replica_set manifest file and another 3 from the deployment. 
+
+
 
 
 
