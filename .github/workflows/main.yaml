@@ -23,8 +23,8 @@ jobs:
 
     - name: Ensure ECR repositories exist
       run: |
-        aws ecr describe-repositories --repository-names clo835-assignment1/mysql || aws ecr create-repository --repository-name clo835-assignment1/mysql
-        aws ecr describe-repositories --repository-names clo835-assignment1/web_server || aws ecr create-repository --repository-name clo835-assignment1/web_server
+        aws ecr describe-repositories --repository-names mysql || aws ecr create-repository --repository-name mysql
+        aws ecr describe-repositories --repository-names app || aws ecr create-repository --repository-name app
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -34,7 +34,7 @@ jobs:
     - name: Build, test, tag, and push mysql image to Amazon ECR
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: clo835-assignment1/mysql
+        ECR_REPOSITORY: mysql
         IMAGE_TAG: v0.1
       run: |
         cd src/dockerfiles/mysql/
@@ -46,7 +46,7 @@ jobs:
     - name: Build, tag, and push web_server image to Amazon ECR
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: clo835-assignment1/web_server
+        ECR_REPOSITORY: app
         IMAGE_TAG: v0.1
       run: |
         cd src/dockerfiles/web_server/
