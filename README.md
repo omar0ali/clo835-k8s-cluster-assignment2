@@ -19,7 +19,7 @@ Will prepare everything locally first before moving to the EC2 Instance.
 4. kubectl
 ## Steps
 #### First Step: Build Images (MySQL, WebSite) And Push To Amazon ECR (Automated in GitHub)
-Referring to [main.yaml](https://github.com/omar0ali/portable-cloud-assignment1/blob/main/.github/workflows/main.yml) of the assignment 1 that I worked on, since its already has the code to build and push the images (mysql, flask_app) to Amazon ECR. I copied the part that when it builds the image and push them to amazon ECR.
+Referring to [main.yaml](https://github.com/omar0ali/clo835-k8s-cluster-assignment2/blob/main/.github/workflows/main.yaml), since we already used it in assignment 1 to build and push the images (mysql, flask_app) to Amazon ECR. I copied the part that when it builds the image and push them to amazon ECR.
 ##### GitHub Action - Build and push images
 ###### Ensure the following setup in the GitHub Actions Secrets
 2. `AWS_ACCESS_KEY_ID`
@@ -28,6 +28,34 @@ Referring to [main.yaml](https://github.com/omar0ali/portable-cloud-assignment1/
 
 >[!NOTE]
 The containerized application will use **pod**, **replicaset**, **deployment** and **service** manifests. Will expose web application using Service of type **NodePort**. And MySQL will be exposed using a Service of type **ClusterIP**. Lastly, a modification of the config file and another deployment to show a new version of the application.
+
+##### KIND & Kubectl Setup
+To install kind here the [install documentation](https://kind.sigs.k8s.io/docs/user/quick-start/#installing-from-release-binaries) for linux
+
+```bash
+# For AMD64 / x86_64
+[ $(uname -m) = x86_64 ] && curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.27.0/kind-linux-amd64
+# For ARM64
+[ $(uname -m) = aarch64 ] && curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.27.0/kind-linux-arm64
+chmod +x ./kind
+sudo mv ./kind /usr/local/bin/kind
+```
+
+Next will need `kubectl` installed as well. [install documentation](https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/#install-kubectl-binary-with-curl-on-linux) 
+
+```bash
+ curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+```
+
+```bash
+sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+```
+
+Testing to ensure is installed
+
+```bash
+kubectl version --client
+```
 
 #### ECR Login EC2 Instance
 
