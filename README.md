@@ -195,7 +195,7 @@ kubectl exec -it employees-pod -n employees-space -- sh
 To connect to MySQL
 
 ```bash
-nc -zv mysql-service.mysql-space.svc.cluster.local 3306
+kubectl run testpod --rm -it --image=busybox:1.28 --restart=Never -n mysql-space -- nc -zv mysql-service.mysql-space.svc.cluster.local 3306
 ```
 
 Check logs
