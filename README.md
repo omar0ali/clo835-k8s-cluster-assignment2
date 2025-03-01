@@ -128,7 +128,7 @@ I took a look at [labels and selectors](https://kubernetes.io/docs/concepts/over
 
 >Labels are intended to be used to specify identifying attributes of objects that are meaningful and relevant to users, but do not directly imply semantics --[Labels and Selectors](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/)
 
-From that I understand there is no dependency between running pods, replicas_sets, and deployments after each other so they can use the pod that were initially created from i.e replica_set or pod. So its only used to organize and to select subsets of objects (such as pods).
+From that I understand there is no dependency between running pods, replicas_sets, and deployments after each other so they can use the pod that were initially created from i.e ReplicaSet or pod. So its only used to organize and to select subsets of objects (such as pods).
 
 Because I tried to do that and see what happens when I run (pod.yaml, replicaset.yaml and deployment.yaml) in order and check how many pods were created from that, and I saw, two pods, one from the pod.yaml and the second from the deployment. But initially we only need one pod of `mysql`. Thus, this confirms that there isn't any semantic or meaningful relationship between them.
 
@@ -148,13 +148,13 @@ mysql-deployment-85d884657-49c2r   1/1     Running   0          27s
 
 ```
 
-What I see here that the deployment creates its own replica_set and pods, disregarding the fact there exists a replicas_set and a pod using the selector and `matchLabels`. So I think only the replica_set can manage the existing pods using the selector. 
+What I see here that the deployment creates its own ReplicaSet and pods, disregarding the fact there exists a replicas_set and a pod using the selector and `matchLabels`. So I think only the replica_set can manage the existing pods using the selector. 
 
-I found an issue [github:#66742](https://github.com/kubernetes/kubernetes/issues/66742) someone suggested that because a replica_set was manually created first, that’s why the deployment did not take over. However, the real reason is that deployments do not adopt pre-existing replica_sets or pods, they always create their own. [reference](https://github.com/kubernetes/kubernetes/issues/66742#issuecomment-2054124694)
+I found an issue [github:#66742](https://github.com/kubernetes/kubernetes/issues/66742) someone suggested that because a ReplicaSet was manually created first, that’s why the deployment did not take over. However, the real reason is that deployments do not adopt pre-existing ReplicaSets or pods, they always create their own. [reference](https://github.com/kubernetes/kubernetes/issues/66742#issuecomment-2054124694)
 
 ##### Continue
 
-I believe that I will face the same issue when I start the employee flask application, and that it will create even more replicas, original a single pod from the first pod manifest file, then 3 replicas pods from the replica_set manifest file and another 3 from the deployment. 
+I believe that I will face the same issue when I start the employee flask application, and that it will create even more replicas, original a single pod from the first pod manifest file, then 3 replicas pods from the ReplicaSet manifest file and another 3 from the deployment. 
 
 ##### Namespaces
 
@@ -162,7 +162,7 @@ We will need a namespace for both (mysql and web application).
 
 ```bash
 kubectl create namespace mysql-space
-kubectl create namespace app-space
+kubectl create namespace employees-space
 ```
 
 There are two directories that contains the k8s configs/manifest files that will deploy either pods, replicas, or deployments. First directory contains web application configs, and the second contains mysql configs.
@@ -192,7 +192,7 @@ To connect to the Web App Pod
 kubectl exec -it employees-pod -n employees-space -- sh
 ```
 
-To connect to MySQL
+To test connection to MySQL
 
 ```bash
 kubectl run testpod --rm -it --image=busybox:1.28 --restart=Never -n mysql-space -- nc -zv mysql-service.mysql-space.svc.cluster.local 3306
@@ -203,3 +203,49 @@ Check logs
 ```bash
 kubectl logs demployees-pod -n employees-space
 ```
+
+### Questions
+###### What is the IP of the K8s API server in your cluster? (Answer in the report)
+
+I can get the ip address by executing either of the following commands
+
+```bash
+docker ps
+kubectl cluster-info
+```
+
+>[!NOTE]
+>If we have multiple clusters, we will need to select the cluster using the the command i.e `kubectl config use-context kind-kind` [docs](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_config/kubectl_config_set-context/)
+
+![](Pasted%20image%2020250228205604.png)
+
+###### After deploying mysql and web applications pods with their respective namespaces. Can both applications listen on the same port inside the container?
+Yes, both applications can listen on the same port inside their respective containers. Each pod has a unique IP address, even if they are in different namespaces.
+
+The conflict happens **only if multiple services are exposed using the same NodePort** on a cluster, but **containerPorts inside pods do not conflict**.
+
+Note that **MySQL Pod** using the namespace: `mysql-space` and listens on **3306**, and web App Pod using namespace: `employees-space` Listens on **8080**. Both can use the same ports inside their respective containers without issues.
+###### Connect to the server running in the application pod and get a valid response.
+
+![](Pasted%20image%2020250301001602.png)
+
+![](Pasted%20image%2020250301001816.png)
+
+This only was available once as well started the services for both mysql and the web application since they use the ports to ensure its accessibility. 
+###### Examine the logs of the invoked application to demonstrate the response from the server was reflected in the log file 
+![](Pasted%20image%2020250301002714.png)
+###### Explain. Use the “app:mysql” label to create ReplicaSets for MySQL application.
+What I understood that in terms of taking ownership of the running pods using selector/labels applies here. There are other rules that were mentioned somewhere in the documentation `pod-template-hash`, but in this specific scenario, when `kubectl apply -f mysql-replicaset.yaml` that created a replicaset of mysql and took ownership of that running pod, so this replicaset now governs that pod. 
+###### Use the labels from step 3 as selectors in the deployment manifest.
+At this point where I saw the odd behavior, deployment didn't take ownership here, but it created its own replicaset and pods.  That is only applies on mysql. However, for the web application, that was not the case as I also have shown in the video, the deployment took govern over the replicaset that was created that was also governs the pod. 
+
+>[!NOTE]
+>This is the part where I lack knowledge. I observed an odd behavior when using kind: Deployment, where the MySQL Deployment did not take ownership of the ReplicaSet, but the Employees application Deployment did. I need to research further to understand why this happened.
+###### Is the replicaset created in step 3 part of this deployment? Explain. 
+For the web application (employees) yes, once the deployment was applied, I checked and saw that the replicaSet was taking over by the Deployment. 
+###### Explain the reason we are using different service types for the web and MySQL applications. 
+First, we have the cluster node, where we need to open a port for communication. Then, we have services, which I see as components that manage traffic between applications based on specific instructions.
+
+For MySQL service, it is set to ClusterIP, meaning it only allows internal communication within the cluster. It ensures that traffic reaches the MySQL pod but does not expose it outside the cluster.
+
+On the other hand, the web application service uses NodePort, which allows external access. This means it forwards traffic from outside the cluster to the appropriate application pod. That will give us access from outside of the cluster i.e using public ip address to access the web application.
