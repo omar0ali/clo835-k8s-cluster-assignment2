@@ -217,7 +217,7 @@ kubectl cluster-info
 >[!NOTE]
 >If we have multiple clusters, we will need to select the cluster using the the command i.e `kubectl config use-context kind-kind` [docs](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_config/kubectl_config_set-context/)
 
-![](Pasted%20image%2020250228205604.png)
+![](School/CAA/Term%202/Portable%20Tech%20in%20Cloud/assignments/assignment2/screenshots/Pasted%20image%2020250228205604.png)
 
 ###### After deploying mysql and web applications pods with their respective namespaces. Can both applications listen on the same port inside the container?
 Yes, both applications can listen on the same port inside their respective containers. Each pod has a unique IP address, even if they are in different namespaces.
@@ -227,13 +227,13 @@ The conflict happens **only if multiple services are exposed using the same Node
 Note that **MySQL Pod** using the namespace: `mysql-space` and listens on **3306**, and web App Pod using namespace: `employees-space` Listens on **8080**. Both can use the same ports inside their respective containers without issues.
 ###### Connect to the server running in the application pod and get a valid response.
 
-![](Pasted%20image%2020250301001602.png)
+![](screenshots/Pasted%20image%2020250301001602.png)
 
-![](Pasted%20image%2020250301001816.png)
+![](screenshots/Pasted%20image%2020250301001816.png)
 
 This only was available once as well started the services for both mysql and the web application since they use the ports to ensure its accessibility. 
 ###### Examine the logs of the invoked application to demonstrate the response from the server was reflected in the log file 
-![](Pasted%20image%2020250301002714.png)
+![](screenshots/Pasted%20image%2020250301002714.png)
 ###### Explain. Use the “app:mysql” label to create ReplicaSets for MySQL application.
 What I understood that in terms of taking ownership of the running pods using selector/labels applies here. There are other rules that were mentioned somewhere in the documentation `pod-template-hash`, but in this specific scenario, when `kubectl apply -f mysql-replicaset.yaml` that created a replicaset of mysql and took ownership of that running pod, so this replicaset now governs that pod. 
 ###### Use the labels from step 3 as selectors in the deployment manifest.
