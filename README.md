@@ -1,3 +1,4 @@
+Omar BaGunaid
 ## Overview
 Will build a containerized application in a single-node K8s cluster using [KIND](https://kind.sigs.k8s.io/) (Kubernetes in docker) [kind docs](https://kind.sigs.k8s.io/). Similar to the previous assignment [assignment1](https://github.com/omar0ali/portable-cloud-assignment1)  we will use the same web application from the following repository.
 
@@ -95,7 +96,7 @@ kubectl create secret docker-registry ecr-secret --docker-server=<aws-account-id
 >As I was testing my deployments with a default imperative way, the creation of the first cluster, ports weren't mapped to the host, so it took quite long time until understanding what was missing. Once that was set, I recreated the cluster with that configuration file, and ensured that my pods were accessed by the host machine. Not to mention the creation of services for each type of pod, such as mysql (ClusterIP) and the app (NodePort) is important.
 
 Firstly, will need to create a cluster node and **we need to ensure the port we are exposing, that is also assigned in that configuration file.** 
-###### Example
+##### Example
 
 ```yaml
 kind: Cluster
@@ -117,7 +118,7 @@ kind create cluster --config  assignment2-cluster.yaml
 
 This will ensure the cluster node forward traffic to the host. Will also ensure that ec2 instance port 30000 is open from using the security group.
 
-##### Started With
+#### Starting
 
 At the beginning I just wanted to have a working website, so I only used deployment kind for both mysql and web-application, and it worked after configuring the services as well, and used the default namespaces.
 ###### Splitting/Dividing the deployment into (pod, replicaset, deployment) 
@@ -151,11 +152,11 @@ mysql-deployment-85d884657-49c2r   1/1     Running   0          27s
 What I see here that the deployment creates its own ReplicaSet and pods, disregarding the fact there exists a replicas_set and a pod using the selector and `matchLabels`. So I think only the replica_set can manage the existing pods using the selector. 
 
 I found an issue [github:#66742](https://github.com/kubernetes/kubernetes/issues/66742) someone suggested that because a ReplicaSet was manually created first, that’s why the deployment did not take over. However, the real reason is that deployments do not adopt pre-existing ReplicaSets or pods, they always create their own. [reference](https://github.com/kubernetes/kubernetes/issues/66742#issuecomment-2054124694)
+#### Continue
 
-##### Continue
+I think that I will face the same issue when I start the employee flask application, and that it will create even more replicas, original a single pod from the first pod manifest file, then 3 replicas pods from the ReplicaSet manifest file and another 3 from the deployment. 
 
-I believe that I will face the same issue when I start the employee flask application, and that it will create even more replicas, original a single pod from the first pod manifest file, then 3 replicas pods from the ReplicaSet manifest file and another 3 from the deployment. 
-
+**UPDATE**: But later found out that wasn't the case for the web application. That behavior only applied to mysql. I will come back to this later.
 ##### Namespaces
 
 We will need a namespace for both (mysql and web application). 
@@ -218,7 +219,6 @@ kubectl cluster-info
 >If we have multiple clusters, we will need to select the cluster using the the command i.e `kubectl config use-context kind-kind` [docs](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_config/kubectl_config_set-context/)
 
 ![](School/CAA/Term%202/Portable%20Tech%20in%20Cloud/assignments/assignment2/screenshots/Pasted%20image%2020250228205604.png)
-
 ###### After deploying mysql and web applications pods with their respective namespaces. Can both applications listen on the same port inside the container?
 Yes, both applications can listen on the same port inside their respective containers. Each pod has a unique IP address, even if they are in different namespaces.
 
