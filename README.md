@@ -1,4 +1,3 @@
-Omar BaGunaid
 ## Overview
 Will build a containerized application in a single-node K8s cluster using [KIND](https://kind.sigs.k8s.io/) (Kubernetes in docker) [kind docs](https://kind.sigs.k8s.io/). Similar to the previous assignment [assignment1](https://github.com/omar0ali/portable-cloud-assignment1)  we will use the same web application from the following repository.
 
@@ -113,7 +112,7 @@ nodes:
 To create the cluster first using the following manifest file.
 
 ```bash
-kind create cluster --config  assignment2-cluster.yaml
+kind create cluster --config cluster.yaml
 ```
 
 This will ensure the cluster node forward traffic to the host. Will also ensure that ec2 instance port 30000 is open from using the security group.
@@ -173,8 +172,8 @@ As well there is the cluster configuration.
 ```bash
 drwxr-xr-x. 4 ec2-user ec2-user    96 Feb 27 21:23 .
 drwx------. 9 ec2-user ec2-user 16384 Feb 28 09:56 ..
--rw-r--r--. 1 ec2-user ec2-user   211 Feb 27 19:33 app-cluster.yaml
-drwxr-xr-x. 2 ec2-user ec2-user    57 Feb 28 06:25 app-deployment
+-rw-r--r--. 1 ec2-user ec2-user   211 Feb 27 19:33 cluster.yaml
+drwxr-xr-x. 2 ec2-user ec2-user    57 Feb 28 06:25 employees-deployment
 -rw-r--r--. 1 ec2-user ec2-user  2125 Feb 28 01:20 ecr-pass.txt
 drwxr-xr-x. 2 ec2-user ec2-user   112 Feb 28 09:33 mysql-deployment
 ```
