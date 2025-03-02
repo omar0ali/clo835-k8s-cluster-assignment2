@@ -86,9 +86,11 @@ aws ecr get-login-password --region us-east-1 > ecr-pass.txt
 ```
 
 ```bash
-kubectl create secret docker-registry ecr-secret --docker-server=<aws-account-id>.dkr.ecr.us-east-1.amazonaws.com --docker-username=AWS --docker-password="$(cat ecr-pass.txt)"
+kubectl create secret docker-registry ecr-secret --docker-server=<aws-account-id>.dkr.ecr.us-east-1.amazonaws.com --docker-username=AWS --docker-password="$(cat ecr-pass.txt)" --namespace=...
 ```
 
+>[!NOTE]
+>When creating a secret, will need to provide the name space name to create that secret within that namespace. `--namesplace=...` will have to add one for employees-space and the other for mysql-space.
 #### Deploying Pods & Services
 
 >[!IMPORTANT]
@@ -116,7 +118,6 @@ kind create cluster --config cluster.yaml
 ```
 
 This will ensure the cluster node forward traffic to the host. Will also ensure that ec2 instance port 30000 is open from using the security group.
-
 #### Starting
 
 At the beginning I just wanted to have a working website, so I only used deployment kind for both mysql and web-application, and it worked after configuring the services as well, and used the default namespaces.
@@ -217,32 +218,33 @@ kubectl cluster-info
 >[!NOTE]
 >If we have multiple clusters, we will need to select the cluster using the the command i.e `kubectl config use-context kind-kind` [docs](https://kubernetes.io/docs/reference/kubectl/generated/kubectl_config/kubectl_config_set-context/)
 
-![](School/CAA/Term%202/Portable%20Tech%20in%20Cloud/assignments/assignment2/screenshots/Pasted%20image%2020250228205604.png)
-###### After deploying mysql and web applications pods with their respective namespaces. Can both applications listen on the same port inside the container?
+![](screenshots/Pasted%20image%2020250228205604.png)
+##### After deploying mysql and web applications pods with their respective namespaces. Can both applications listen on the same port inside the container?
 Yes, both applications can listen on the same port inside their respective containers. Each pod has a unique IP address, even if they are in different namespaces.
 
 The conflict happens **only if multiple services are exposed using the same NodePort** on a cluster, but **containerPorts inside pods do not conflict**.
 
 Note that **MySQL Pod** using the namespace: `mysql-space` and listens on **3306**, and web App Pod using namespace: `employees-space` Listens on **8080**. Both can use the same ports inside their respective containers without issues.
-###### Connect to the server running in the application pod and get a valid response.
+##### Connect to the server running in the application pod and get a valid response.
 
 ![](screenshots/Pasted%20image%2020250301001602.png)
 
 ![](screenshots/Pasted%20image%2020250301001816.png)
 
 This only was available once as well started the services for both mysql and the web application since they use the ports to ensure its accessibility. 
-###### Examine the logs of the invoked application to demonstrate the response from the server was reflected in the log file 
+##### Examine the logs of the invoked application to demonstrate the response from the server was reflected in the log file 
+
 ![](screenshots/Pasted%20image%2020250301002714.png)
-###### Explain. Use the “app:mysql” label to create ReplicaSets for MySQL application.
+##### Explain. Use the “app:mysql” label to create ReplicaSets for MySQL application.
 What I understood that in terms of taking ownership of the running pods using selector/labels applies here. There are other rules that were mentioned somewhere in the documentation `pod-template-hash`, but in this specific scenario, when `kubectl apply -f mysql-replicaset.yaml` that created a replicaset of mysql and took ownership of that running pod, so this replicaset now governs that pod. 
-###### Use the labels from step 3 as selectors in the deployment manifest.
+##### Use the labels from step 3 as selectors in the deployment manifest.
 At this point where I saw the odd behavior, deployment didn't take ownership here, but it created its own replicaset and pods.  That is only applies on mysql. However, for the web application, that was not the case as I also have shown in the video, the deployment took govern over the replicaset that was created that was also governs the pod. 
 
 >[!NOTE]
 >This is the part where I lack knowledge. I observed an odd behavior when using kind: Deployment, where the MySQL Deployment did not take ownership of the ReplicaSet, but the Employees application Deployment did. I need to research further to understand why this happened.
-###### Is the replicaset created in step 3 part of this deployment? Explain. 
+##### Is the replicaset created in step 3 part of this deployment? Explain. 
 For the web application (employees) yes, once the deployment was applied, I checked and saw that the replicaSet was taking over by the Deployment. 
-###### Explain the reason we are using different service types for the web and MySQL applications. 
+##### Explain the reason we are using different service types for the web and MySQL applications. 
 First, we have the cluster node, where we need to open a port for communication. Then, we have services, which I see as components that manage traffic between applications based on specific instructions.
 
 For MySQL service, it is set to ClusterIP, meaning it only allows internal communication within the cluster. It ensures that traffic reaches the MySQL pod but does not expose it outside the cluster.
